@@ -123,15 +123,27 @@ fun getTaskStatistics(): Map<String, Any> {
     val completed = tasks.count { it.isCompleted }
     val active = total - completed
     val completionRate = if (total > 0) (completed.toDouble() / total * 100) else 0.0
+    val overdueCount = getOverdueTasks().size
+
+    val priorityDistribution = mutableMapOf<String, Int>()
+    priorities.forEach { priority ->
+        priorityDistribution[priority] = tasks.count { it.priority == priority }
+    }
+
+    val categoryDistribution = mutableMapOf<String, Int>()
+    val allCategories = tasks.map { it.category }.distinct()
+    allCategories.forEach { category ->
+        categoryDistribution[category] = tasks.count { it.category == category }
+    }
 
     return mapOf(
         "total" to total,
         "completed" to completed,
         "active" to active,
         "completionRate" to completionRate,
-        "priorityDistribution" to tasks.groupingBy { it.priority }.eachCount(),
-        "categoryDistribution" to tasks.groupingBy { it.category }.eachCount(),
-        "overdueCount" to getOverdueTasks().size
+        "priorityDistribution" to priorityDistribution,
+        "categoryDistribution" to categoryDistribution,
+        "overdueCount" to overdueCount
     )
 }
 
@@ -174,12 +186,14 @@ fun displayStatistics() {
     """.trimIndent()
     )
 
-    (stats["priorityDistribution"] as Map<*, *>).forEach { (priority, count) ->
+    val priorityDist = stats["priorityDistribution"] as Map<String, Int>
+    priorityDist.forEach { (priority, count) ->
         println("   $priority: $count")
     }
 
     println("\nРаспределение по категориям:")
-    (stats["categoryDistribution"] as Map<*, *>).forEach { (category, count) ->
+    val categoryDist = stats["categoryDistribution"] as Map<String, Int>
+    categoryDist.forEach { (category, count) ->
         println("   $category: $count")
     }
 }
@@ -386,8 +400,8 @@ fun handleSearchTasks() {
 fun main() {
     println("Добро пожаловать в TaskMaster!")
 
-    createTask("Изучить Kotlin", "Освоить функциональное программирование", "Высокий", "11.10.2025", "Учеба")
-    createTask("Купить продукты", "Молоко, хлеб, фрукты", "Средний", "12.10.2025", "Личное")
+    createTask("Изучить Kotlin", "Освоить функциональное программирование", "Высокий", "30.12.2024", "Учеба")
+    createTask("Купить продукты", "Молоко, хлеб, фрукты", "Средний", "20.12.2024", "Личное")
 
     while (true) {
         showMainMenu()
